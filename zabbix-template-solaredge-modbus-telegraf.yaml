@@ -1,0 +1,686 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 4ab36c122c034c8bb90e6a44b4ff31ee
+      name: Inversores
+  templates:
+    - uuid: 37a83b1eb02e4f2b94187462eb26cbcb
+      template: 'Template SolarEdge SE17K - Prometheus e telegraf'
+      name: 'Template SolarEdge SE17K - Prometheus e telegraf'
+      groups:
+        - name: Inversores
+      items:
+        - uuid: 1a17fa2f824c407b943d5bbe6bca7988
+          name: 'Corrente AC (A)'
+          type: CALCULATED
+          key: ac.current.a
+          units: W
+          params: 'last(//ac.current.raw) * power(10, last(//ac.current.sf))'
+        - uuid: de6f799eb73444a8943d1a0862f2b2dd
+          name: 'AC Current raw'
+          type: DEPENDENT
+          key: ac.current.raw
+          delay: '0'
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - modbus_ac_current_raw
+                - value
+                - ''
+          master_item:
+            key: telegraf.prom
+        - uuid: 18587d7847a544aabbf89dc903956868
+          name: 'AC Current sf'
+          type: DEPENDENT
+          key: ac.current.sf
+          delay: '0'
+          value_type: FLOAT
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - modbus_ac_current_sf
+                - value
+                - ''
+          master_item:
+            key: telegraf.prom
+        - uuid: cb3e3ec664c14100b84016e065b8770a
+          name: 'produção do dia (kWh)'
+          type: CALCULATED
+          key: ac.energy.today.v
+          value_type: FLOAT
+          status: DISABLED
+          units: kWh
+          params: 'last(//energy.total.kwh) - min(//energy.total.kwh,24h)'
+        - uuid: 047128d62d67482e8696d4888138cf01
+          name: 'Frequência (Hz)'
+          type: CALCULATED
+          key: ac.freq.hz
+          units: Hz
+          params: 'last(//ac.freq.raw) * power(10, last(//ac.freq.sf))'
+          triggers:
+            - uuid: e1d4a0954ca4416a94fe3b2776a0ada9
+              expression: 'avg(/Template SolarEdge SE17K - Prometheus e telegraf/ac.freq.hz,2m)<59 or avg(/Template SolarEdge SE17K - Prometheus e telegraf/ac.freq.hz,2m)>61'
+              name: 'Frequência fora de 59–61 Hz'
+              priority: WARNING
+              manual_close: 'YES'
+              dependencies:
+                - name: 'Sem dados do mestre (Prometheus)'
+                  expression: 'nodata(/Template SolarEdge SE17K - Prometheus e telegraf/telegraf.prom,5m)=1'
+              tags:
+                - tag: proto
+                  value: prometheus
+                - tag: source
+                  value: telegraf
+            - uuid: 6ce55be65682484a9f703203ea0f5e23
+              expression: 'nodata(/Template SolarEdge SE17K - Prometheus e telegraf/ac.freq.hz,5m)=1'
+              name: 'Sem dados da frequência'
+              priority: AVERAGE
+              manual_close: 'YES'
+              dependencies:
+                - name: 'Sem dados do mestre (Prometheus)'
+                  expression: 'nodata(/Template SolarEdge SE17K - Prometheus e telegraf/telegraf.prom,5m)=1'
+              tags:
+                - tag: proto
+                  value: prometheus
+                - tag: source
+                  value: telegraf
+        - uuid: 2f7bb6baa1a94a4c93b24f4a387e3d5f
+          name: 'AC Freq raw'
+          type: DEPENDENT
+          key: ac.freq.raw
+          delay: '0'
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - modbus_ac_freq_raw
+                - value
+                - ''
+          master_item:
+            key: telegraf.prom
+        - uuid: ab6d3f09714b48ccbb5077f12c376bb6
+          name: 'AC Freq SF'
+          type: DEPENDENT
+          key: ac.freq.sf
+          delay: '0'
+          value_type: FLOAT
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - modbus_ac_freq_sf
+                - value
+                - ''
+          master_item:
+            key: telegraf.prom
+        - uuid: 0c3034308cd445f6adb9bfa3abfa1452
+          name: 'AC Power raw'
+          type: DEPENDENT
+          key: ac.power.raw
+          delay: '0'
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - modbus_ac_power_raw
+                - value
+                - ''
+          master_item:
+            key: telegraf.prom
+        - uuid: b2550282724c478782e65855876b5913
+          name: 'AC Power sf'
+          type: DEPENDENT
+          key: ac.power.sf
+          delay: '0'
+          value_type: FLOAT
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - modbus_ac_power_sf
+                - value
+                - ''
+          master_item:
+            key: telegraf.prom
+        - uuid: 768b054bdaaa490da6b1c9ffd1681560
+          name: 'AC Potência (W)'
+          type: CALCULATED
+          key: ac.power.w
+          units: W
+          params: 'last(//ac.power.raw) * power(10, last(//ac.power.sf))'
+        - uuid: 6bb3e31dccc0463fb998269618bd2c4f
+          name: 'V12 raw'
+          type: DEPENDENT
+          key: ac.v12.raw
+          delay: '0'
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - modbus_ac_v12_raw
+                - value
+                - ''
+          master_item:
+            key: telegraf.prom
+        - uuid: 65c87fa5845249f799cf963ab4abd9fb
+          name: 'Tensão L1-L2 (V)'
+          type: CALCULATED
+          key: ac.v12.v
+          units: V
+          params: 'last(//ac.v12.raw) / 10'
+        - uuid: 0a9c7d69c95740faa5fddd5eec95e797
+          name: 'V23 raw'
+          type: DEPENDENT
+          key: ac.v23.raw
+          delay: '0'
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - modbus_ac_v23_raw
+                - value
+                - ''
+          master_item:
+            key: telegraf.prom
+        - uuid: 4be60cf73c4641fe85adb1dc71551576
+          name: 'Tensão L2-L3 (V)'
+          type: CALCULATED
+          key: ac.v23.v
+          units: V
+          params: 'last(//ac.v23.raw) / 10'
+        - uuid: c54269d74f6f4f688d7194629e3bbcd8
+          name: 'V31 raw'
+          type: DEPENDENT
+          key: ac.v31.raw
+          delay: '0'
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - modbus_ac_v31_raw
+                - value
+                - ''
+          master_item:
+            key: telegraf.prom
+        - uuid: a14abead5ef343118eb28f50eec86c60
+          name: 'Tensão L3-L1 (V)'
+          type: CALCULATED
+          key: ac.v31.v
+          units: V
+          params: 'last(//ac.v31.raw) / 10'
+        - uuid: aa583e06b2cb4a0793d4f322bb60f356
+          name: 'AC Tensão (V)'
+          type: CALCULATED
+          key: avg.ac.v123.v
+          units: V
+          params: '(last(//ac.v12.v) + last(//ac.v23.v) + last(//ac.v31.v)) / 3'
+          triggers:
+            - uuid: ede8a006b3b24989a7676e9baab87376
+              expression: 'avg(/Template SolarEdge SE17K - Prometheus e telegraf/avg.ac.v123.v,1m)<180 or avg(/Template SolarEdge SE17K - Prometheus e telegraf/avg.ac.v123.v,1m)>440'
+              name: 'Sub/sobretensão severa (<180 V ou >440 V por 1m)'
+              priority: HIGH
+              manual_close: 'YES'
+              dependencies:
+                - name: 'Sem dados do mestre (Prometheus)'
+                  expression: 'nodata(/Template SolarEdge SE17K - Prometheus e telegraf/telegraf.prom,5m)=1'
+              tags:
+                - tag: proto
+                  value: prometheus
+                - tag: source
+                  value: telegraf
+            - uuid: a47a8151fdac48ea8ae90afa71790b3f
+              expression: 'avg(/Template SolarEdge SE17K - Prometheus e telegraf/avg.ac.v123.v,2m)<200 or avg(/Template SolarEdge SE17K - Prometheus e telegraf/avg.ac.v123.v,2m)>420'
+              name: 'Tensão média L-L fora de 200–420 V'
+              priority: WARNING
+              manual_close: 'YES'
+              dependencies:
+                - name: 'Sem dados do mestre (Prometheus)'
+                  expression: 'nodata(/Template SolarEdge SE17K - Prometheus e telegraf/telegraf.prom,5m)=1'
+              tags:
+                - tag: proto
+                  value: prometheus
+                - tag: source
+                  value: telegraf
+        - uuid: 626703ecf1b04ec89c014bd354c77783
+          name: 'Corrente DC (A)'
+          type: CALCULATED
+          key: dc.current.a
+          units: W
+          params: 'last(//dc.current.raw) * power(10, last(//dc.current.sf))'
+        - uuid: 05a3151d78384ffbb5064ab4164d4206
+          name: 'DC Current raw'
+          type: DEPENDENT
+          key: dc.current.raw
+          delay: '0'
+          value_type: FLOAT
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - modbus_dc_current_raw
+                - value
+                - ''
+          master_item:
+            key: telegraf.prom
+        - uuid: 0594573c3f2743b6ad44e6a176a44574
+          name: 'DC Current sf'
+          type: DEPENDENT
+          key: dc.current.sf
+          delay: '0'
+          value_type: FLOAT
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - modbus_dc_current_sf
+                - value
+                - ''
+          master_item:
+            key: telegraf.prom
+        - uuid: ff747783c04f4163b339efbe581432f7
+          name: 'DC power raw'
+          type: DEPENDENT
+          key: dc.power.raw
+          delay: '0'
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - modbus_dc_power_raw
+                - value
+                - ''
+          master_item:
+            key: telegraf.prom
+        - uuid: 45b4880cf9d0486bb6d1ba5821aab17f
+          name: 'DC power sf'
+          type: DEPENDENT
+          key: dc.power.sf
+          delay: '0'
+          value_type: FLOAT
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - modbus_dc_power_sf
+                - value
+                - ''
+          master_item:
+            key: telegraf.prom
+        - uuid: c9dc39f7e7b9488c8620f08712e9e1fc
+          name: 'DC Potência (W)'
+          type: CALCULATED
+          key: dc.power.w
+          units: W
+          params: 'last(//dc.power.raw) * power(10, last(//dc.power.sf))'
+        - uuid: 32477a50b6494560afdeb5971ad7ea56
+          name: 'DC Potência (verificação)'
+          type: CALCULATED
+          key: dc.power.w.v
+          units: W
+          params: 'last(//dc.voltage.v) * last(//dc.current.a)'
+        - uuid: 2b4bfd6c63c84e5c890936065c71d359
+          name: 'DC Voltage raw'
+          type: DEPENDENT
+          key: dc.voltage.raw
+          delay: '0'
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - modbus_dc_voltage_raw
+                - value
+                - ''
+          master_item:
+            key: telegraf.prom
+        - uuid: c9a5462d043843df8f99b220561ede51
+          name: 'DC Voltage sf'
+          type: DEPENDENT
+          key: dc.voltage.sf
+          delay: '0'
+          value_type: FLOAT
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - modbus_dc_voltage_sf
+                - value
+                - ''
+          master_item:
+            key: telegraf.prom
+        - uuid: 4954e97d6a78489cba7be39d4d4c3aa3
+          name: 'DC Tensão (V)'
+          type: CALCULATED
+          key: dc.voltage.v
+          units: V
+          params: 'last(//dc.voltage.raw) * power(10, last(//dc.voltage.sf))'
+          triggers:
+            - uuid: 96302bf1bb5b4757a7e82742e9de6f24
+              expression: 'avg(/Template SolarEdge SE17K - Prometheus e telegraf/dc.voltage.v,1m)>{$SE_DC_OV}'
+              name: 'DC sobretensão (pico acima do teto)'
+              priority: HIGH
+              manual_close: 'YES'
+              dependencies:
+                - name: 'Sem dados do mestre (Prometheus)'
+                  expression: 'nodata(/Template SolarEdge SE17K - Prometheus e telegraf/telegraf.prom,5m)=1'
+              tags:
+                - tag: proto
+                  value: prometheus
+                - tag: source
+                  value: telegraf
+        - uuid: ed577c7cf6914cb08d47d85a2a672829
+          name: 'Energia total (kWh)'
+          type: CALCULATED
+          key: energy.total.kwh
+          value_type: FLOAT
+          status: DISABLED
+          units: kWh
+          params: 'last(//energy.total.wh) / 1000'
+        - uuid: 9a9bd5884b9042119922a1aba15a0528
+          name: 'Energia total (MWh)'
+          type: CALCULATED
+          key: energy.total.mwh
+          value_type: FLOAT
+          status: DISABLED
+          units: MWh
+          params: 'last(//energy.total.wh) / 1000000'
+        - uuid: 8a5447a213094ce69a69f08292b4982a
+          name: 'Energy total raw'
+          type: DEPENDENT
+          key: energy.total.raw
+          delay: '0'
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - modbus_energy_total_raw
+                - value
+                - ''
+          master_item:
+            key: telegraf.prom
+        - uuid: 67a980b26eea463dbcb4824836873527
+          name: 'Energy total SF'
+          type: DEPENDENT
+          key: energy.total.sf
+          delay: '0'
+          value_type: FLOAT
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - modbus_energy_total_sf
+                - value
+                - ''
+          master_item:
+            key: telegraf.prom
+        - uuid: c1e0bf568f8043f2bd1a38611c252ab7
+          name: 'Energia total (Wh)'
+          type: CALCULATED
+          key: energy.total.wh
+          value_type: FLOAT
+          units: Wh
+          params: 'last(//energy.total.raw) * power(10, last(//energy.total.sf))'
+          triggers:
+            - uuid: 2daed8ecfaad41188300a530263a2768
+              expression: '(time()>=060000 and time()<=180000) and change(/Template SolarEdge SE17K - Prometheus e telegraf/energy.total.wh)=0'
+              name: 'Energia não aumentou em horário de sol'
+              priority: INFO
+              manual_close: 'YES'
+              dependencies:
+                - name: 'Sem dados do mestre (Prometheus)'
+                  expression: 'nodata(/Template SolarEdge SE17K - Prometheus e telegraf/telegraf.prom,5m)=1'
+              tags:
+                - tag: proto
+                  value: prometheus
+                - tag: source
+                  value: telegraf
+        - uuid: 019380ea3d7548819fd89c4680e2088b
+          name: 'Status Inverter'
+          type: DEPENDENT
+          key: i.status
+          delay: '0'
+          valuemap:
+            name: 'Inverter Status'
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - modbus_i_status
+                - value
+                - ''
+          master_item:
+            key: telegraf.prom
+          triggers:
+            - uuid: c017527a33ad4453914a4c7a44f5c39b
+              expression: 'last(/Template SolarEdge SE17K - Prometheus e telegraf/i.status)=4'
+              name: 'Buscando a melhor potência para funcionamento da placa solar'
+              priority: INFO
+              manual_close: 'YES'
+            - uuid: ef63be0a3042449f887542a06ed3fefa
+              expression: 'last(/Template SolarEdge SE17K - Prometheus e telegraf/i.status)=7'
+              name: 'Ocorreu uma falha ou erro no sistema, exigindo atenção imediata'
+              priority: INFO
+              manual_close: 'YES'
+            - uuid: 884ff64e377f4289a4ab71268bb7a986
+              expression: 'last(/Template SolarEdge SE17K - Prometheus e telegraf/i.status)=2'
+              name: 'O inversor dormiu'
+              priority: INFO
+              manual_close: 'YES'
+            - uuid: 3d86ea1c136547fbae94fb59c89e9787
+              expression: 'last(/Template SolarEdge SE17K - Prometheus e telegraf/i.status)=6'
+              name: 'O inversor está desligando'
+              priority: INFO
+              manual_close: 'YES'
+            - uuid: 5744b5d2f6b749d0be78d83ec6661605
+              expression: 'last(/Template SolarEdge SE17K - Prometheus e telegraf/i.status)=8'
+              name: 'O inversor está em modo de espera'
+              priority: INFO
+              manual_close: 'YES'
+            - uuid: b6a7a2d2ee6c4686af4bed3c3af47fce
+              expression: 'last(/Template SolarEdge SE17K - Prometheus e telegraf/i.status)=3'
+              name: 'O inversor está inciando'
+              priority: INFO
+              manual_close: 'YES'
+            - uuid: a35fee155d79464ca210cd274bc806f4
+              expression: 'last(/Template SolarEdge SE17K - Prometheus e telegraf/i.status)=5'
+              name: 'O inversor está limitando ou reduzindo intencionalmente sua saída de potência'
+              priority: INFO
+              manual_close: 'YES'
+            - uuid: 30b18210f0844e96ad3202a147dc5b8f
+              expression: 'last(/Template SolarEdge SE17K - Prometheus e telegraf/i.status)=1'
+              name: 'O inversor está off'
+              priority: INFO
+              manual_close: 'YES'
+        - uuid: 0af8262eacae497199ae5c49dfc908f6
+          name: 'Temperatura (°C)'
+          type: CALCULATED
+          key: inv.temp.c
+          units: °C
+          params: 'last(//inv.temp.raw) * 0.01'
+          triggers:
+            - uuid: 47289bc21b3445b4a33e941919d0f67d
+              expression: 'avg(/Template SolarEdge SE17K - Prometheus e telegraf/inv.temp.c,5m)>{$SE_TEMP_ALARM}'
+              name: 'Alta temperatura'
+              priority: AVERAGE
+              manual_close: 'YES'
+              dependencies:
+                - name: 'Sem dados do mestre (Prometheus)'
+                  expression: 'nodata(/Template SolarEdge SE17K - Prometheus e telegraf/telegraf.prom,5m)=1'
+              tags:
+                - tag: proto
+                  value: prometheus
+                - tag: source
+                  value: telegraf
+            - uuid: 14dd44c15d3b4082af927d8497084a13
+              expression: 'avg(/Template SolarEdge SE17K - Prometheus e telegraf/inv.temp.c,5m)>{$SE_TEMP_WARN}'
+              name: 'Alta temperatura (Atenção)'
+              priority: WARNING
+              manual_close: 'YES'
+              dependencies:
+                - name: 'Sem dados do mestre (Prometheus)'
+                  expression: 'nodata(/Template SolarEdge SE17K - Prometheus e telegraf/telegraf.prom,5m)=1'
+              tags:
+                - tag: proto
+                  value: prometheus
+                - tag: source
+                  value: telegraf
+            - uuid: 4adea67205034c3696ebcce7762cd2c5
+              expression: 'avg(/Template SolarEdge SE17K - Prometheus e telegraf/inv.temp.c,10m)=0 and avg(/Template SolarEdge SE17K - Prometheus e telegraf/inv.temp.c,10m)>1000'
+              name: 'Sensor de temperatura incoerente'
+              priority: WARNING
+              manual_close: 'YES'
+              dependencies:
+                - name: 'Sem dados do mestre (Prometheus)'
+                  expression: 'nodata(/Template SolarEdge SE17K - Prometheus e telegraf/telegraf.prom,5m)=1'
+              tags:
+                - tag: proto
+                  value: prometheus
+                - tag: source
+                  value: telegraf
+        - uuid: beb2a50e69c54da2b075ba3ead6aa51c
+          name: 'Temperatura (°F)'
+          type: CALCULATED
+          key: inv.temp.f
+          units: °F
+          params: 'last(//inv.temp.c) * 9/5 + 32'
+        - uuid: e876133983034246a02ff973e49d6959
+          name: 'Temp raw'
+          type: DEPENDENT
+          key: inv.temp.raw
+          delay: '0'
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - modbus_temp_raw
+                - value
+                - ''
+          master_item:
+            key: telegraf.prom
+        - uuid: 52e646e74d7645ab96939eccbbc39805
+          name: 'Temp sf'
+          type: DEPENDENT
+          key: inv.temp.sf
+          delay: '0'
+          value_type: FLOAT
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - modbus_temp_sf
+                - value
+                - ''
+          master_item:
+            key: telegraf.prom
+        - uuid: 668cf7623c7a4032be193b0879cb4430
+          name: 'Potência ativa (W)'
+          type: CALCULATED
+          key: sum.ac.power.raw.sf
+          units: W
+          params: 'last(//ac.power.raw) * power(10, last(//ac.power.sf))'
+        - uuid: affd4136a6484c099fb242b70dd46a21
+          name: 'Telegraf Prometheus metrics'
+          type: HTTP_AGENT
+          key: telegraf.prom
+          value_type: TEXT
+          trends: '0'
+          url: 'http://telegraf:9273/metrics'
+          triggers:
+            - uuid: c0daa565c69c4558afaa84f3e9d219c1
+              expression: 'nodata(/Template SolarEdge SE17K - Prometheus e telegraf/telegraf.prom,5m)=1'
+              name: 'Sem dados do mestre (Prometheus)'
+              priority: AVERAGE
+              manual_close: 'YES'
+              tags:
+                - tag: proto
+                  value: prometheus
+                - tag: source
+                  value: telegraf
+      macros:
+        - macro: '{$SE_AC_LIMIT_W}'
+          value: '17000'
+        - macro: '{$SE_DAY_END}'
+          value: '163000'
+        - macro: '{$SE_DAY_START}'
+          value: '080000'
+        - macro: '{$SE_DC_OV}'
+          value: '900'
+        - macro: '{$SE_DC_UV}'
+          value: '350'
+        - macro: '{$SE_EFF_ALARM}'
+          value: '0.75'
+        - macro: '{$SE_EFF_WARN}'
+          value: '0.85'
+        - macro: '{$SE_MIN_W_DAY}'
+          value: '100'
+        - macro: '{$SE_TEMP_ALARM}'
+          value: '85'
+        - macro: '{$SE_TEMP_WARN}'
+          value: '75'
+      valuemaps:
+        - uuid: eb01fa1525f64b3186b32e50243d9a4f
+          name: 'Inverter Status'
+          mappings:
+            - value: '1'
+              newvalue: 'Off'
+            - value: '2'
+              newvalue: Sleeping
+            - value: '3'
+              newvalue: Starting
+            - value: '4'
+              newvalue: MPPT
+            - value: '5'
+              newvalue: Throttled
+            - value: '6'
+              newvalue: 'Shutting down'
+            - value: '7'
+              newvalue: Fault
+            - value: '8'
+              newvalue: Standby
+  triggers:
+    - uuid: 5b428604e2014b56b9ee505c7cdbf3cb
+      expression: 'avg(/Template SolarEdge SE17K - Prometheus e telegraf/dc.power.w,5m)>1000 and avg(/Template SolarEdge SE17K - Prometheus e telegraf/sum.ac.power.raw.sf,5m) / avg(/Template SolarEdge SE17K - Prometheus e telegraf/dc.power.w,5m) < {$SE_EFF_WARN}'
+      name: 'Baixa eficiência AC/DC'
+      priority: WARNING
+      manual_close: 'YES'
+      dependencies:
+        - name: 'Sem dados do mestre (Prometheus)'
+          expression: 'nodata(/Template SolarEdge SE17K - Prometheus e telegraf/telegraf.prom,5m)=1'
+      tags:
+        - tag: proto
+          value: prometheus
+        - tag: source
+          value: telegraf
+    - uuid: 4f485d686fa248d9ace6d21749096825
+      expression: 'avg(/Template SolarEdge SE17K - Prometheus e telegraf/dc.power.w,5m)>1000 and avg(/Template SolarEdge SE17K - Prometheus e telegraf/sum.ac.power.raw.sf,5m) / avg(/Template SolarEdge SE17K - Prometheus e telegraf/dc.power.w,5m) < {$SE_EFF_ALARM}'
+      name: 'Baixa eficiência AC/DC (alarm)'
+      priority: AVERAGE
+      manual_close: 'YES'
+      dependencies:
+        - name: 'Sem dados do mestre (Prometheus)'
+          expression: 'nodata(/Template SolarEdge SE17K - Prometheus e telegraf/telegraf.prom,5m)=1'
+      tags:
+        - tag: proto
+          value: prometheus
+        - tag: source
+          value: telegraf
+    - uuid: 98059c8e89004f3390578cb97bd725d8
+      expression: 'avg(/Template SolarEdge SE17K - Prometheus e telegraf/sum.ac.power.raw.sf,5m)>1000 and avg(/Template SolarEdge SE17K - Prometheus e telegraf/dc.voltage.v,5m)<{$SE_DC_UV}'
+      name: 'DC subtensão sob carga (tensão baixa com geração > 1 kW, por 5 min)'
+      priority: HIGH
+      manual_close: 'YES'
+      dependencies:
+        - name: 'Sem dados do mestre (Prometheus)'
+          expression: 'nodata(/Template SolarEdge SE17K - Prometheus e telegraf/telegraf.prom,5m)=1'
+      tags:
+        - tag: proto
+          value: prometheus
+        - tag: source
+          value: telegraf
+    - uuid: d50096475d95431e916b6635ce40b3b8
+      expression: 'abs(last(/Template SolarEdge SE17K - Prometheus e telegraf/ac.v12.v)) - abs(last(/Template SolarEdge SE17K - Prometheus e telegraf/ac.v23.v)) > 30 or abs(last(/Template SolarEdge SE17K - Prometheus e telegraf/ac.v23.v)) - abs(last(/Template SolarEdge SE17K - Prometheus e telegraf/ac.v31.v)) > 30 or abs(last(/Template SolarEdge SE17K - Prometheus e telegraf/ac.v31.v)) - abs(last(/Template SolarEdge SE17K - Prometheus e telegraf/ac.v12.v)) > 30'
+      name: 'Desequilíbrio de tensão L-L > 30 V'
+      priority: WARNING
+      manual_close: 'YES'
+      dependencies:
+        - name: 'Sem dados do mestre (Prometheus)'
+          expression: 'nodata(/Template SolarEdge SE17K - Prometheus e telegraf/telegraf.prom,5m)=1'
+      tags:
+        - tag: proto
+          value: prometheus
+        - tag: source
+          value: telegraf
+    - uuid: 45ba24f59c324d2782e096e26ed83f70
+      expression: '(time()>=060000 and time()<=18000) and last(/Template SolarEdge SE17K - Prometheus e telegraf/ac.freq.hz)>59 and last(/Template SolarEdge SE17K - Prometheus e telegraf/ac.freq.hz)<61 and avg(/Template SolarEdge SE17K - Prometheus e telegraf/ac.power.raw,30m)=0'
+      name: 'Zero W em horário de sol com rede ok'
+      priority: INFO
+      manual_close: 'YES'
+      dependencies:
+        - name: 'Sem dados do mestre (Prometheus)'
+          expression: 'nodata(/Template SolarEdge SE17K - Prometheus e telegraf/telegraf.prom,5m)=1'
+      tags:
+        - tag: proto
+          value: prometheus
+        - tag: source
+          value: telegraf
